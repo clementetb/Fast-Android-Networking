@@ -38,7 +38,7 @@ allprojects {
         google()
     }
 
-    group = "com.amitshekhar.android"
+    group = "com.kortext.android"
     version = '1.0.2'
 
     apply plugin: "com.jfrog.bintray"
