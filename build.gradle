@@ -19,6 +19,7 @@
 
 buildscript {
     repositories {
+        mavenLocal()
         jcenter()
         google()
     }
@@ -36,10 +37,13 @@ allprojects {
         jcenter()
         google()
     }
-}
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+    group = "com.amitshekhar.android"
+    version = '1.0.2'
+
+    apply plugin: "com.jfrog.bintray"
+    apply plugin: "android-maven"
+    apply plugin: "maven-publish"
 }
 
 ext {

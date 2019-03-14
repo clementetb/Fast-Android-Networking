@@ -54,9 +54,11 @@ import java.io.File;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -88,13 +90,13 @@ public class ANRequest<T extends ANRequest> {
     private int sequenceNumber;
     private Object mTag;
     private ResponseType mResponseType;
-    private HashMap<String, List<String>> mHeadersMap = new HashMap<>();
-    private HashMap<String, String> mBodyParameterMap = new HashMap<>();
-    private HashMap<String, String> mUrlEncodedFormBodyParameterMap = new HashMap<>();
-    private HashMap<String, MultipartStringBody> mMultiPartParameterMap = new HashMap<>();
-    private HashMap<String, List<String>> mQueryParameterMap = new HashMap<>();
-    private HashMap<String, String> mPathParameterMap = new HashMap<>();
-    private HashMap<String, List<MultipartFileBody>> mMultiPartFileMap = new HashMap<>();
+    private Map<String, List<String>> mHeadersMap = new LinkedHashMap<>();
+    private Map<String, String> mBodyParameterMap = new LinkedHashMap<>();
+    private Map<String, String> mUrlEncodedFormBodyParameterMap = new LinkedHashMap<>();
+    private Map<String, MultipartStringBody> mMultiPartParameterMap = new LinkedHashMap<>();
+    private Map<String, List<String>> mQueryParameterMap = new LinkedHashMap<>();
+    private Map<String, String> mPathParameterMap = new LinkedHashMap<>();
+    private Map<String, List<MultipartFileBody>> mMultiPartFileMap = new LinkedHashMap<>();
     private String mDirPath;
     private String mFileName;
     private String mApplicationJsonString = null;
@@ -186,13 +188,14 @@ public class ANRequest<T extends ANRequest> {
 
     public ANRequest(DownloadBuilder builder) {
         this.mRequestType = RequestType.DOWNLOAD;
-        this.mMethod = Method.GET;
+        this.mMethod = Method.POST;
         this.mPriority = builder.mPriority;
         this.mUrl = builder.mUrl;
         this.mTag = builder.mTag;
         this.mDirPath = builder.mDirPath;
         this.mFileName = builder.mFileName;
         this.mHeadersMap = builder.mHeadersMap;
+        this.mUrlEncodedFormBodyParameterMap = builder.mUrlEncodedFormBodyParameterMap;
         this.mQueryParameterMap = builder.mQueryParameterMap;
         this.mPathParameterMap = builder.mPathParameterMap;
         this.mCacheControl = builder.mCacheControl;
@@ -931,9 +934,9 @@ public class ANRequest<T extends ANRequest> {
         private int mMaxWidth;
         private int mMaxHeight;
         private ImageView.ScaleType mScaleType;
-        private HashMap<String, List<String>> mHeadersMap = new HashMap<>();
-        private HashMap<String, List<String>> mQueryParameterMap = new HashMap<>();
-        private HashMap<String, String> mPathParameterMap = new HashMap<>();
+        private Map<String, List<String>> mHeadersMap = new LinkedHashMap<>();
+        private Map<String, List<String>> mQueryParameterMap = new LinkedHashMap<>();
+        private Map<String, String> mPathParameterMap = new LinkedHashMap<>();
         private CacheControl mCacheControl;
         private Executor mExecutor;
         private OkHttpClient mOkHttpClient;
@@ -1167,11 +1170,11 @@ public class ANRequest<T extends ANRequest> {
         private String mStringBody = null;
         private byte[] mByte = null;
         private File mFile = null;
-        private HashMap<String, List<String>> mHeadersMap = new HashMap<>();
-        private HashMap<String, String> mBodyParameterMap = new HashMap<>();
-        private HashMap<String, String> mUrlEncodedFormBodyParameterMap = new HashMap<>();
-        private HashMap<String, List<String>> mQueryParameterMap = new HashMap<>();
-        private HashMap<String, String> mPathParameterMap = new HashMap<>();
+        private Map<String, List<String>> mHeadersMap = new LinkedHashMap<>();
+        private Map<String, String> mBodyParameterMap = new LinkedHashMap<>();
+        private Map<String, String> mUrlEncodedFormBodyParameterMap = new LinkedHashMap<>();
+        private Map<String, List<String>> mQueryParameterMap = new LinkedHashMap<>();
+        private Map<String, String> mPathParameterMap = new LinkedHashMap<>();
         private CacheControl mCacheControl;
         private Executor mExecutor;
         private OkHttpClient mOkHttpClient;
@@ -1430,12 +1433,13 @@ public class ANRequest<T extends ANRequest> {
 
     public static class DownloadBuilder<T extends DownloadBuilder> implements RequestBuilder {
 
+        public int mMethod;
         private Priority mPriority = Priority.MEDIUM;
         private String mUrl;
         private Object mTag;
-        private HashMap<String, List<String>> mHeadersMap = new HashMap<>();
-        private HashMap<String, List<String>> mQueryParameterMap = new HashMap<>();
-        private HashMap<String, String> mPathParameterMap = new HashMap<>();
+        private Map<String, List<String>> mHeadersMap = new LinkedHashMap<>();
+        private Map<String, List<String>> mQueryParameterMap = new LinkedHashMap<>();
+        private Map<String, String> mPathParameterMap = new LinkedHashMap<>();
         private String mDirPath;
         private String mFileName;
         private CacheControl mCacheControl;
@@ -1443,6 +1447,7 @@ public class ANRequest<T extends ANRequest> {
         private Executor mExecutor;
         private OkHttpClient mOkHttpClient;
         private String mUserAgent;
+        private Map<String, String> mUrlEncodedFormBodyParameterMap = new LinkedHashMap<>() ;
 
         public DownloadBuilder(String url, String dirPath, String fileName) {
             this.mUrl = url;
@@ -1489,6 +1494,27 @@ public class ANRequest<T extends ANRequest> {
         public T addHeaders(Object object) {
             if (object != null) {
                 return addHeaders(ParseUtil
+                        .getParserFactory()
+                        .getStringMap(object));
+            }
+            return (T) this;
+        }
+
+        public T addUrlEncodeFormBodyParameter(String key, String value) {
+            mUrlEncodedFormBodyParameterMap.put(key, value);
+            return (T) this;
+        }
+
+        public T addUrlEncodeFormBodyParameter(Map<String, String> bodyParameterMap) {
+            if (bodyParameterMap != null) {
+                mUrlEncodedFormBodyParameterMap.putAll(bodyParameterMap);
+            }
+            return (T) this;
+        }
+
+        public T addUrlEncodeFormBodyParameter(Object object) {
+            if (object != null) {
+                mUrlEncodedFormBodyParameterMap.putAll(ParseUtil
                         .getParserFactory()
                         .getStringMap(object));
             }
@@ -1615,11 +1641,11 @@ public class ANRequest<T extends ANRequest> {
         private Priority mPriority = Priority.MEDIUM;
         private String mUrl;
         private Object mTag;
-        private HashMap<String, List<String>> mHeadersMap = new HashMap<>();
-        private HashMap<String, List<String>> mQueryParameterMap = new HashMap<>();
-        private HashMap<String, String> mPathParameterMap = new HashMap<>();
-        private HashMap<String, MultipartStringBody> mMultiPartParameterMap = new HashMap<>();
-        private HashMap<String, List<MultipartFileBody>> mMultiPartFileMap = new HashMap<>();
+        private Map<String, List<String>> mHeadersMap = new LinkedHashMap<>();
+        private Map<String, List<String>> mQueryParameterMap = new LinkedHashMap<>();
+        private Map<String, String> mPathParameterMap = new LinkedHashMap<>();
+        private Map<String, MultipartStringBody> mMultiPartParameterMap = new LinkedHashMap<>();
+        private Map<String, List<MultipartFileBody>> mMultiPartFileMap = new LinkedHashMap<>();
         private CacheControl mCacheControl;
         private int mPercentageThresholdForCancelling = 0;
         private Executor mExecutor;

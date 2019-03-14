@@ -5,7 +5,7 @@
  *  *
  *  *    Licensed under the Apache License, Version 2.0 (the "License");
  *  *    you may not use this file except in compliance with the License.
- *  *    You may obtain a copy of the License at
+ *  *    You may obtain a logCopy of the License at
  *  *
  *  *        http://www.apache.org/licenses/LICENSE-2.0
  *  *
@@ -121,7 +121,44 @@ public class Rx2InternalNetworking {
         Request okHttpRequest;
         Request.Builder builder = new Request.Builder().url(request.getUrl());
         InternalNetworking.addHeadersToRequestBuilder(builder, request);
-        builder = builder.get();
+
+        RequestBody requestBody;
+
+        switch (request.getMethod()) {
+            case GET: {
+                builder = builder.get();
+                break;
+            }
+            case POST: {
+                requestBody = request.getRequestBody();
+                builder = builder.post(requestBody);
+                break;
+            }
+            case PUT: {
+                requestBody = request.getRequestBody();
+                builder = builder.put(requestBody);
+                break;
+            }
+            case DELETE: {
+                requestBody = request.getRequestBody();
+                builder = builder.delete(requestBody);
+                break;
+            }
+            case HEAD: {
+                builder = builder.head();
+                break;
+            }
+            case OPTIONS: {
+                builder = builder.method(ANConstants.OPTIONS, null);
+                break;
+            }
+            case PATCH: {
+                requestBody = request.getRequestBody();
+                builder = builder.patch(requestBody);
+                break;
+            }
+        }
+
         if (request.getCacheControl() != null) {
             builder.cacheControl(request.getCacheControl());
         }
